@@ -1,0 +1,219 @@
+# Septic System Designer
+# Purpose: To automatically calculate Septic System details and give quick and accurate estimations
+
+import math  # Required function for rounding numbers
+
+debug = False  # Debug Setting on/off (True/False respectively)
+while True:
+
+    print('')
+
+    if debug is True:  # Debug
+        print('      debug = True')  #
+
+    print(''' Septic System Design Calculator.
+       Please input a whole number or lowercase letter for the following questions.''')
+    number_of_bedrooms = int(input('   How many bedrooms?: '))  # Bedroom number set
+    true_bedroom_number = number_of_bedrooms  # True bedroom number remember
+
+    if debug is True:  # Debug
+        print('      ', number_of_bedrooms * 1, ' Bedroom(s)')  #
+
+    garbage_disposal = int(input('   How many garbage disposals?: '))  # calculated Bedroom value set
+    number_of_bedrooms = number_of_bedrooms + garbage_disposal  #
+
+    if debug is True:  # Debug
+        print(f'       Garbage disposal count {garbage_disposal}')  #
+
+    hot_tub = int(input('   How many hot tubs?: '))  # calculated Bedroom value set
+    number_of_bedrooms = number_of_bedrooms + hot_tub  #
+
+    if debug is True:  # Debug
+        print(f'       Hot tub count {hot_tub}'  #
+              f'')
+
+    if number_of_bedrooms <= 3:  # Tank sizing calc.
+        min_tank_size = 1000  #
+        tank_surface_area = 27  #
+    elif number_of_bedrooms == 4:  #
+        min_tank_size = 1250  #
+        tank_surface_area = 34  #
+    elif number_of_bedrooms == 5:  #
+        min_tank_size = 1500  #
+        tank_surface_area = 40  #
+    elif number_of_bedrooms == 6:  #
+        min_tank_size = 1750  #
+        tank_surface_area = 47  #
+    else:  #
+        min_tank_size = 1750 + (250 * (number_of_bedrooms - 6))  #
+        tank_surface_area = 47 + (7 * (number_of_bedrooms - 6))  #
+
+    if debug is True:
+        print('      ', min_tank_size * 1, 'minimum tank size (gallons)')
+        print('      ', tank_surface_area * 1, 'minimum tank surface area (sq,ft)')
+        print(' ')
+
+    print('')
+    app_rate_now = input('''    Do you want to set the application rate now?
+        Default application rate = 0.5 (31-45 min)
+        y/n? - ''')
+
+    application_rate = 0.5  # default setting
+
+    if app_rate_now == 'y':  # for exact sf calculations
+        print('''    Application Rate Table-
+        Perc. Rate in min/in : Application Rate in g/d/sf
+                         1-5 : 1.20
+                         6-7 : 1.00
+                        8-10 : 0.90
+                       11-15 : 0.80
+                       16-20 : 0.70
+                       21-30 : 0.60
+                       31-45 : 0.50
+                       46-60 : 0.45 ''')  # application rate chart
+        application_rate = float(input('    What is the Application Rate?: '))  # Manual application rate set
+
+    # Sand filter SF Calc.
+    sandsqft = round(((number_of_bedrooms * 110) * .85) / 1.2)
+    stotal = (sandsqft + (number_of_bedrooms * 110))
+    # Eljen Mat SF Calc.
+    eljensqft = round(((number_of_bedrooms * 110) * 1) / 1.2)
+    # Infiltrator SF Calc.
+    insqft = round(((number_of_bedrooms * 110) * .75) / application_rate)
+    # Gravel SF Calc.
+    gravelsqft = round(((number_of_bedrooms * 110) * 1.0) / application_rate)
+
+    # System type selection
+    system_type = input(f'''
+       Choose System Type:   (Type letter) / Full Area + Replacement Area = [Total Required Area]
+       Sand Filter-               (s)      / {stotal} SF + {sandsqft} SF = [{stotal + sandsqft} SF]
+       Eljen Mats-                (e)      / {eljensqft} SF + {eljensqft} SF = [{eljensqft + eljensqft} SF]
+       Infiltrators-              (i)      / {insqft} SF + {insqft} SF = [{insqft + insqft} SF]
+       Gravel Trench-             (g)      / {gravelsqft} SF + {gravelsqft} SF = [{gravelsqft + gravelsqft} SF]
+
+                            Answer-''')
+    print("")
+
+    # You typed in an invalid character. Please try again using only one of the defined lowercase letters.
+
+    if debug is True:
+        print(f'       System Type is {system_type}')
+
+    if debug is True:
+        print(f'       True bedroom count {true_bedroom_number}')
+
+    if debug is True:
+        print('      ', number_of_bedrooms * 1, 'Bedroom system')
+
+    if system_type == 's':  # Sand filter system
+        sandfilterlength = math.ceil((number_of_bedrooms * 110) / 12)
+        sandfilter = sandfilterlength * 12
+        sqft = round(((number_of_bedrooms * 110) * .85) / 1.2)
+        print(f'''
+        SPECIFICATIONS & CALCULATIONS:
+        THIS DESIGN IS BASED ON {true_bedroom_number} BEDROOMS, 110 GPD/BEDROOM = {number_of_bedrooms * 110} GPD
+        TOILETS: 1.6 GALLONS PER FLUSH, MAX.
+        ({garbage_disposal}) GARBAGE DISPOSAL
+        ({hot_tub}) HOT TUB
+        MINIMUM TANK SIZE: {min_tank_size} GALLONS
+        MINIMUM TANK SURFACE AREA: {tank_surface_area} SF''')
+        print(f'''
+        AREA OF SAND FILTER: 12' X {sandfilterlength}' = {sandfilter} SF
+        USING A MAXIMUM APPLICATION RATE OF 1.0 GAL/DAY/SF:
+        ({number_of_bedrooms * 110}GAL/DAY) / (1.0 GAL/DAY/SF) = {number_of_bedrooms * 110} SF
+
+        AREA OF DOWNSTREAM ABSORPTION TRENCHES:
+        USING A MAXIMUM APPLICATION RATE OF 1.2 GAL/DAY/SF AND 85% OF
+        THE DAILY FLOW: ({number_of_bedrooms * 110} GPD X .85)/1.2 GPD/SF = {sqft} SF
+        {sqft}/2'(TRENCH WIDTH) = {sqft / 2} LINEAR FEET OF TRENCH OR
+        X LATERALS X FT LONG''')
+
+    if system_type == 'e':
+
+        application_rate = 1.2
+        sqft = round(((number_of_bedrooms * 110) * 1.00) / application_rate)
+
+        print(f'''
+        SPECIFICATIONS & CALCULATIONS:
+        THIS DESIGN IS BASED ON {true_bedroom_number} BEDROOMS, 110 GPD/BEDROOM = {number_of_bedrooms * 110} GPD
+        TOILETS: 1.6 GALLONS PER FLUSH, MAX.
+        ({garbage_disposal}) GARBAGE DISPOSAL
+        ({hot_tub}) HOT TUB
+        MINIMUM TANK SIZE: {min_tank_size} GALLONS
+        MINIMUM TANK SURFACE AREA: {tank_surface_area} SF''')  # Specifications
+        print(f'''
+        AREA OF DOWNSTREAM ABSORPTION TRENCHES:
+        USING A MAXIMUM APPLICATION RATE OF {application_rate} GAL/DAY/SF AND 100% OF
+        THE DAILY FLOW: ({number_of_bedrooms * 110} GPD X 1.00)/{application_rate} GPD/SF = {sqft} SF
+        {sqft}/6 SF/LF(TRENCH WIDTH) = {math.ceil(sqft / 6)} LINEAR FEET OF TRENCH OR
+        X LATERALS X FT LONG''')  # Calculations
+
+    if system_type == 'i':
+        if app_rate_now == 'n':
+            print('''
+        Application Rate Table-
+        Perc. Rate in min/in : Application Rate in g/d/sf
+                         1-5 : 1.20
+                         6-7 : 1.00
+                        8-10 : 0.90
+                       11-15 : 0.80
+                       16-20 : 0.70
+                       21-30 : 0.60
+                       31-45 : 0.50
+                       46-60 : 0.45
+        ''')  # application rate chart
+            application_rate = float(input('    What is the Application Rate?: '))
+
+        sqft = round(((number_of_bedrooms * 110) * .75) / application_rate)
+
+        print(f'''
+        SPECIFICATIONS & CALCULATIONS:
+        THIS DESIGN IS BASED ON {true_bedroom_number} BEDROOMS, 110 GPD/BEDROOM = {number_of_bedrooms * 110} GPD
+        TOILETS: 1.6 GALLONS PER FLUSH, MAX.
+        ({garbage_disposal}) GARBAGE DISPOSAL
+        ({hot_tub}) HOT TUB
+        MINIMUM TANK SIZE: {min_tank_size} GALLONS
+        MINIMUM TANK SURFACE AREA: {tank_surface_area} SF''')  # Specifications
+        print(f'''
+        AREA OF DOWNSTREAM ABSORPTION TRENCHES:
+        USING A MAXIMUM APPLICATION RATE OF {application_rate} GAL/DAY/SF AND 75% OF
+        THE DAILY FLOW: ({number_of_bedrooms * 110} GPD X 0.75)/{application_rate} GPD/SF = {sqft} SF
+        {sqft}/2'(TRENCH WIDTH) = {sqft / 2} LINEAR FEET OF TRENCH OR
+        X LATERALS X FT LONG''')  # Calculations
+
+    if system_type == 'g':
+        if app_rate_now == 'n':
+            print('''
+        Application Rate Table-
+        Perc. Rate in min/in : Application Rate in g/d/sf
+                         1-5 : 1.20
+                         6-7 : 1.00
+                        8-10 : 0.90
+                       11-15 : 0.80
+                       16-20 : 0.70
+                       21-30 : 0.60
+                       31-45 : 0.50
+                       46-60 : 0.45
+        ''')  # application rate chart
+            application_rate = float(input('    What is the Application Rate?: '))
+
+        sqft = round(((number_of_bedrooms * 110) * 1) / application_rate)
+
+        print(f'''
+        SPECIFICATIONS & CALCULATIONS:
+        THIS DESIGN IS BASED ON {true_bedroom_number} BEDROOMS, 110 GPD/BEDROOM = {number_of_bedrooms * 110} GPD
+        TOILETS: 1.6 GALLONS PER FLUSH, MAX.
+        ({garbage_disposal}) GARBAGE DISPOSAL
+        ({hot_tub}) HOT TUB
+        MINIMUM TANK SIZE: {min_tank_size} GALLONS
+        MINIMUM TANK SURFACE AREA: {tank_surface_area} SF
+
+        AREA OF DOWNSTREAM ABSORPTION TRENCHES:
+        USING A MAXIMUM APPLICATION RATE OF {application_rate} GAL/DAY/SF AND 100% OF
+        THE DAILY FLOW: ({number_of_bedrooms * 110} GPD X 1.00)/{application_rate} GPD/SF = {sqft} SF
+        {sqft}/2'(TRENCH WIDTH) = {sqft / 2} LINEAR FEET OF TRENCH OR
+        X LATERALS X FT LONG''')  # Calculations
+
+    cont = input('Do you want to end the program? y/n?')
+    if cont == 'y':
+        break
