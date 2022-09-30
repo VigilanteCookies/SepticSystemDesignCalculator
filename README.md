@@ -44,4 +44,4 @@ Application Rate.(Note: not needed for sandfilters)
   
   
   
-  MK115 02/04/2022 v̶1̶.8̶        09/30/2022 v2.0!
+  MK115 02/04/2022 v̶1̶.8̶ ____09/30/2022 v2.0!
