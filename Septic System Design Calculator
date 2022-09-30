@@ -169,7 +169,7 @@ if program_selector == 1 or program_selector == 2:
     sandsqft = round(((bedrooms * GPD) * .85) / 1.2)
     stotal = (sandsqft + (bedrooms * GPD))
     # Eljen Mat SF Calc.
-    eljensqft = round(((bedrooms * GPD) * (1.0 - ETUG)) / application_rate)
+    eljensqft = round((((bedrooms * GPD) * (1.0 - ETUG)) / application_rate)/2)
     # Infiltrator SF Calc.
     insqft = round(((bedrooms * GPD) * (.75 - ETUI)) / application_rate)
     # Gravel SF Calc.
@@ -179,14 +179,17 @@ if program_selector == 1 or program_selector == 2:
     system_type = input(f'''
     Design Data Readout:
     Tank Sizing: {min_tank_size} Gallons {tank_surface_area} SF
-    Choose System Type:   (Type letter) / Full Area + Replacement Area = [Total Required Area]
-    Sand Filter -              (s)      / {stotal} SF + {sandsqft} SF = [{stotal + sandsqft} SF]
+    Choose System Type:   (Type letter) / Full Area   +   Replacement Area  =  [Total Required Area]
+    Sand Filter -              (s)      / {stotal} SF   +   {sandsqft} SF  =  [{stotal + sandsqft} SF]
     Max Allowable Slope - 15%                               {math.ceil(sandsqft / 2)} Linear feet
-    Eljen Mats -               (e)      / {eljensqft} SF + {eljensqft} SF = [{eljensqft + eljensqft} SF]
-    Max Allowable Slope - 15% (20% with stipulations)       {math.ceil(eljensqft / 6)} Linear feet
-    Infiltrators -             (i)      / {insqft} SF + {insqft} SF = [{insqft + insqft} SF]
+    
+    Eljen Mats -               (e)      / {eljensqft} SF   +   {eljensqft} SF  =  [{eljensqft + eljensqft} SF]
+    Max Allowable Slope - 15% (20% with stipulations)       {math.ceil(eljensqft / 3)} Linear feet
+    
+    Infiltrators -             (i)      / {insqft} SF   +   {insqft} SF  =  [{insqft + insqft} SF]
     Max Allowable Slope - 15% (20% with stipulations)       {math.ceil(insqft / 2)} Linear feet
-    Gravel Trench -            (g)      / {gravelsqft} SF + {gravelsqft} SF = [{gravelsqft + gravelsqft} SF]
+    
+    Gravel Trench -            (g)      / {gravelsqft} SF   +   {gravelsqft} SF  =  [{gravelsqft + gravelsqft} SF]
     Max Allowable Slope - 15% (20% with stipulations)       {math.ceil(gravelsqft / 2)} Linear feet
     
     Max Trench Length - 60' unless using a Pressure Distribution Network - 100'
@@ -308,7 +311,7 @@ if program_selector == 4 or program_selector == 2:
     (in GPM): '''))
         head_loss_phundred = ((0.12813453036*(gallons_per_min**1.852))/(pump_pipe_dia**4.8655))
         head_loss = ((head_loss_phundred/100)* pump_pipe_length)
-    print(f'''
+        print(f'''
 PIPE VOLUME CALCULATIONS:
 π x R^2 x LENGTH = GALLONS PER FOOT
 π x {round((pump_pipe_dia/2),4)}^2 x 12" = {round(pump_pipe_vol_pft, 4)}
@@ -382,7 +385,6 @@ X LATERALS X FT LONG''')
         application_rate = float(input('    What is the Application Rate?: '))
 
     if system_type == 'e':
-        application_rate = 1.2
         sqft = round(((bedrooms * GPD) * 1.00) / application_rate)
         print(f'''
 SPECIFICATIONS & CALCULATIONS:
