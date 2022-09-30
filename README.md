@@ -20,7 +20,7 @@ If you dont design septic systems for a living then heres a quick rundown...
   approve of the septic system.
   Dont get too excited because it would also need to be stamped by a PE (Profesional Engineer)
   
-Application Rate.(Note: only used for infiltrators and gravel trenches)
+Application Rate.(Note: not used in sandfilters)
   To get the correct application rate you will need to do a perc test.
   To do a perc test go to the site where you you want the septic.
   Dig a hole 1'ft in diameter and greater than 8"inches but probably less than 30"inches down. 
