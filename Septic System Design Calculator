@@ -1,219 +1,494 @@
-# Septic System Designer
-# Purpose: To automatically calculate Septic System details and give quick and accurate estimations
-
+# Imports
 import math  # Required function for rounding numbers
 
-debug = False  # Debug Setting on/off (True/False respectively)
-while True:
+# Septic System Design Tool
+# This is meant to be the single tool and resource needed to fully design a septic system.
 
-    print('')
+# Planning:
+# Start up- play intro animation or graphic
+# Replacement system?-purpose to determine fixtures for GPD Rate -- add note describing purpose and reasoning
+# if yes allow a select from chart values to select GPD Rate -- if no continue with auto selected 110 rate
+# ask number of- bedrooms, hot tubs, and garbage disposals
+# application rate set with option to skip
+# ask if ETU will be used
 
-    if debug is True:  # Debug
-        print('      debug = True')  #
+# Provide a design readout with as much info as possible for each system
+# (Advanced- draw a graph of each system details for comparison)
+# (Advanced- draw a sketch of each system defaulting to the longest trench length allowed then
+# ask if you want to adjust maximum values (smaller) to change dimensions of the system
+# if no continue -- if yes ask length and width dimensions with max values shown to be inputted as an unchanged value)
 
-    print(''' Septic System Design Calculator.
-       Please input a whole number or lowercase letter for the following questions.''')
-    number_of_bedrooms = int(input('   How many bedrooms?: '))  # Bedroom number set
-    true_bedroom_number = number_of_bedrooms  # True bedroom number remember
+# Select system and print System Design readout, construction notes, and component details.
 
-    if debug is True:  # Debug
-        print('      ', number_of_bedrooms * 1, ' Bedroom(s)')  #
+# Ask if pump is needed
+# if yes ask head high, pump pipe length and diameter, and distribution pipe length and diameter
+# Then calc. volume needed then calc. tank elevations for floats
+# Re-Print System Design readout, construction notes, and component details.
 
-    garbage_disposal = int(input('   How many garbage disposals?: '))  # calculated Bedroom value set
-    number_of_bedrooms = number_of_bedrooms + garbage_disposal  #
 
-    if debug is True:  # Debug
-        print(f'       Garbage disposal count {garbage_disposal}')  #
+# Integer ledger
+program_selector: float(0.0)  # program skip option
+GPD = 110  # default setting used for calculations
+bedrooms = 0  # used for calculations
+garbage_disposal = 0  # used for calculations
+hot_tub = 0  # used for calculations
+application_rate = 0.5  # default setting used for calculations
+min_tank_size = 1000  # default setting final readout
+tank_surface_area = 27  # default setting final readout
+ETU = 'x'  # program skip option
+ETUG = 0  # Conventional system modifier (Needs to be 0 b/c its add/sub)
+ETUI = 0  # Infiltrator modifier (Needs to be 0 b/c its add/sub)
+system_type = 'x'  # System Selector
+sqft = 0  # used for calculations
+cont = 'x'  # Program shutdown option
+elevation_now = 'x'  # program skip option
+app_rate_now = 'x'  # program skip option
+GPD_rate_now = 'x'  # program skip option
+house_to_tank = 0  # Elevation Calcs.
+tank_to_tank = 0  # Elevation Calcs.
+tank_to_db = 0  # Elevation Calcs.
+db_threw_sand = 0  # Elevation Calcs.
+sand_to_db = 0  # Elevation Calcs.
+db_to_trench = 0  # Elevation Calcs.
+trench_to_trench = 0  # Elevation Calcs.
+pump_height = 0  # Elevation Calcs.
+sand_height = 0  # Elevation Calcs.
+first_db_drop = 0  # Elevation Calcs.
+second_db_drop = 0  # Elevation Calcs.
+site_slope = 0
+pump_dosing = 'x'
+head_height = 0.0
+pump_pipe_dia = 0
+pump_pipe_length = 0
+pump_pipe_vol_pft = 0   # This is to cut dow on calculations and make displaying per ft vol. easier
+pump_pipe_vol = 0
+pipe_dia = 0
+pipe_length = 0
+pipe_vol_pft = 0   # This is to cut dow on calculations and make displaying per ft vol. easier
+pipe_vol = 0
+total_vol = 0
+gallons_per_min = 0
+head_loss_phundred = 0
+head_loss = 0.0
+# SPEC Logo
+print('''
+    _______________________________________________
+    |                                             | 
+    |     _____   _____    _______     ______     |
+    |    /        |    \   |          /           |          
+    |    \___     |____/   |____     /            |                                          
+    |        \    |        |         \            |
+    |    ____/    |        |______    \______     |
+    |                                             |     
+    |_____________________________________________|''')
+# Intro to application
+print('''    ___________________________________________________________________________
+    |                                                                         |
+    |   Septic System Design Tool.                                            |
+    |   Programmed by: David Kuss                                             |
+    |   Welcome to your all in one Septic Design Calculator.                  |
+    |                                                                         |
+    |   Instructions for Use:                                                 |
+    |   Please input a number or lowercase letter                             |
+    |   for the following questions as instructed.                            |
+    |_________________________________________________________________________|
+    ''')
+program_selector = float(input('''    What would you like to do today?
 
-    hot_tub = int(input('   How many hot tubs?: '))  # calculated Bedroom value set
-    number_of_bedrooms = number_of_bedrooms + hot_tub  #
+    (1) Quick System Comparison, (2) Full Septic Calculation, 
+    (3) Elevation Calculations, or (4) Pump and pump chamber calculations? 
+    Just type the number of the program you want. - '''))
 
-    if debug is True:  # Debug
-        print(f'       Hot tub count {hot_tub}'  #
-              f'')
+# This is the main info input and quick calc section.
+if program_selector == 1 or program_selector == 2:
+    GPD_rate_now = input('''    
+    Is this a Replacement System?
+    Note: to determine the GPD Rate you need to know what fixtures are being used, New construction defaults to 
+    Post-1994 Fixtures - 1.6 gallons/flush toilets 2.5 gallons/minute faucets & shower heads.
+    y/n? - ''')
+    if GPD_rate_now == 'y':
+        GPD = float(input('''    
+    Design Flow Chart (Table-1)
+    Post-1994 Fixtures 1.6 gallons/flush toilets 2.5 gallons/minute faucets & shower heads         | 110 GPD Rate
+    Pre-1994 Fixtures 3.5 gallons/flush toilets 3.0 gallons/minute faucets & shower heads          | 130 GPD Rate
+    Pre-1980 Fixtures 3.5+ gallons/flush toilets 3.0+ gallons/minute faucets & shower heads        | 150 GPD Rate
+    Waterless Toilets (e.g., composter) (grey water discharge only)                                | 75  GPD Rate
+        
+    What Gallon Per Day (GPD) Rate will be used?: '''))
 
-    if number_of_bedrooms <= 3:  # Tank sizing calc.
+    bedrooms = int(input('    How many bedrooms?: '))  # Bedroom number set
+
+    garbage_disposal = int(input('    How many garbage disposals?: '))  #
+
+    hot_tub = int(input('    How many hot tubs?: '))  #
+
+    if bedrooms + garbage_disposal + hot_tub <= 3:  # Tank sizing calc.
         min_tank_size = 1000  #
         tank_surface_area = 27  #
-    elif number_of_bedrooms == 4:  #
+    elif bedrooms + garbage_disposal + hot_tub == 4:  #
         min_tank_size = 1250  #
         tank_surface_area = 34  #
-    elif number_of_bedrooms == 5:  #
+    elif bedrooms + garbage_disposal + hot_tub == 5:  #
         min_tank_size = 1500  #
         tank_surface_area = 40  #
-    elif number_of_bedrooms == 6:  #
+    elif bedrooms + garbage_disposal + hot_tub == 6:  #
         min_tank_size = 1750  #
         tank_surface_area = 47  #
-    else:  #
-        min_tank_size = 1750 + (250 * (number_of_bedrooms - 6))  #
-        tank_surface_area = 47 + (7 * (number_of_bedrooms - 6))  #
+    else:  # Yes this is correct
+        min_tank_size = 1750 + (250 * (bedrooms + garbage_disposal + hot_tub - 6))  #
+        tank_surface_area = 47 + (7 * (bedrooms + garbage_disposal + hot_tub - 6))  #
 
-    if debug is True:
-        print('      ', min_tank_size * 1, 'minimum tank size (gallons)')
-        print('      ', tank_surface_area * 1, 'minimum tank surface area (sq,ft)')
-        print(' ')
-
-    print('')
     app_rate_now = input('''    Do you want to set the application rate now?
-        Default application rate = 0.5 (31-45 min)
-        y/n? - ''')
-
-    application_rate = 0.5  # default setting
+    Default application rate = 0.5 (31-45 min)
+    y/n? -  ''')
 
     if app_rate_now == 'y':  # for exact sf calculations
-        print('''    Application Rate Table-
-        Perc. Rate in min/in : Application Rate in g/d/sf
-                         1-5 : 1.20
-                         6-7 : 1.00
-                        8-10 : 0.90
-                       11-15 : 0.80
-                       16-20 : 0.70
-                       21-30 : 0.60
-                       31-45 : 0.50
-                       46-60 : 0.45 ''')  # application rate chart
+        print('''
+              Application Rate Table-
+    Perc. Rate in min/in : Application Rate in g/d/sf
+                     1-5 : 1.20
+                     6-7 : 1.00
+                    8-10 : 0.90
+                   11-15 : 0.80
+                   16-20 : 0.70
+                   21-30 : 0.60
+                   31-45 : 0.50
+                   46-60 : 0.45 ''')  # application rate chart
         application_rate = float(input('    What is the Application Rate?: '))  # Manual application rate set
 
-    # Sand filter SF Calc.
-    sandsqft = round(((number_of_bedrooms * 110) * .85) / 1.2)
-    stotal = (sandsqft + (number_of_bedrooms * 110))
+    ETU = input('''    
+    Will an ETU (enhanced treatment unit) be used?
+    Note: ETU's allow for a non-stackable trench reduction of 33% for all standard and shallow systems
+    y/n? - ''')
+
+    if ETU == 'y':
+        ETUG = .33
+        ETUI = .08
+        # ALL SYSTEM SQUARE FOOTAGE CALCULATIONS
+        # Sand filter SF Calc.
+    sandsqft = round(((bedrooms * GPD) * .85) / 1.2)
+    stotal = (sandsqft + (bedrooms * GPD))
     # Eljen Mat SF Calc.
-    eljensqft = round(((number_of_bedrooms * 110) * 1) / 1.2)
+    eljensqft = round(((bedrooms * GPD) * (1.0 - ETUG)) / application_rate)
     # Infiltrator SF Calc.
-    insqft = round(((number_of_bedrooms * 110) * .75) / application_rate)
+    insqft = round(((bedrooms * GPD) * (.75 - ETUI)) / application_rate)
     # Gravel SF Calc.
-    gravelsqft = round(((number_of_bedrooms * 110) * 1.0) / application_rate)
+    gravelsqft = round(((bedrooms * GPD) * (1.0 - ETUG)) / application_rate)
 
     # System type selection
     system_type = input(f'''
-       Choose System Type:   (Type letter) / Full Area + Replacement Area = [Total Required Area]
-       Sand Filter-               (s)      / {stotal} SF + {sandsqft} SF = [{stotal + sandsqft} SF]
-       Eljen Mats-                (e)      / {eljensqft} SF + {eljensqft} SF = [{eljensqft + eljensqft} SF]
-       Infiltrators-              (i)      / {insqft} SF + {insqft} SF = [{insqft + insqft} SF]
-       Gravel Trench-             (g)      / {gravelsqft} SF + {gravelsqft} SF = [{gravelsqft + gravelsqft} SF]
+    Design Data Readout:
+    Tank Sizing: {min_tank_size} Gallons {tank_surface_area} SF
+    Choose System Type:   (Type letter) / Full Area + Replacement Area = [Total Required Area]
+    Sand Filter -              (s)      / {stotal} SF + {sandsqft} SF = [{stotal + sandsqft} SF]
+    Max Allowable Slope - 15%                               {math.ceil(sandsqft / 2)} Linear feet
+    Eljen Mats -               (e)      / {eljensqft} SF + {eljensqft} SF = [{eljensqft + eljensqft} SF]
+    Max Allowable Slope - 15% (20% with stipulations)       {math.ceil(eljensqft / 6)} Linear feet
+    Infiltrators -             (i)      / {insqft} SF + {insqft} SF = [{insqft + insqft} SF]
+    Max Allowable Slope - 15% (20% with stipulations)       {math.ceil(insqft / 2)} Linear feet
+    Gravel Trench -            (g)      / {gravelsqft} SF + {gravelsqft} SF = [{gravelsqft + gravelsqft} SF]
+    Max Allowable Slope - 15% (20% with stipulations)       {math.ceil(gravelsqft / 2)} Linear feet
+    
+    Max Trench Length - 60' unless using a Pressure Distribution Network - 100'
+                       Answer - ''')
+# This is the Elevation Calculation Section
+if program_selector == 3 or program_selector == 2:
 
-                            Answer-''')
-    print("")
+    elevation_now = input('''    
+    Would you like to do elevation calculations from outlet to end of the system?
+    Note: You'll need an in scale sketch of the system for this, but you can come back at any time.
+    y/n? - ''')
+    if elevation_now == 'y':
+        if system_type == 'x':
+            system_type = input('''    Please input which system will be used
+    Sandfilter = (s)    Eljen Mats = (e)    Infiltrators = (i)    Gravel Trench = (g) - ''')
+        pump_dosing = input('''    Is a pump and pump chamber Required? 
+    This will split into 2 different calculations, one to and one after the pump chamber.
+    y/n? - ''')
+        house_to_tank = float(input('''    How long is the pipe from the house to the septic tank?
+    (In feet): '''))
+        if pump_dosing == 'y':
+            tank_to_tank = float(input('''    How long is the pipe from the tank to the pump chamber?
+    (In feet): '''))
+        if pump_dosing != 'y':
+            tank_to_db = float(input('''    How long is the pipe from the tank to the D-Box?
+    (In feet): '''))
+        if system_type == 's':
+            db_threw_sand = float(input('''    how long is the sand filter?
+    (In feet): '''))
+            sand_to_db = float(input('''    How long is the pipe from the sand filter to the D-Box?
+    (In feet): '''))
+        db_to_trench = float(input('''    How long is the longest run of pipe from the D-Box to the Trench?
+    (In feet): '''))
+        trench_to_trench = float(input('''    How long are the trenches?
+    (In feet): '''))
+        tank_drop = float(input('''    Input drop from tank inlet to outlet in inches. (Typical 3")
+    (In Inches): '''))
+        first_db_drop = float(input('''    Input drop from D-Box inlet to outlet in inches. (Typical 2")
+    (In Inches): '''))
+        if pump_dosing == 'y':
+            pump_height = float(input('''    Input pump tank height in inches from invert elevation to bottom. (Typ 66")
+    (In Inches): '''))
+        if system_type == 's':
+            sand_height = float(input('''    Input sand filter depth in inches. (Typical 38")
+    (In Inches): '''))
+            second_db_drop = float(input('''    Input drop from second D-Box inlet to outlet in inches. (Typical 2")
+                (In Inches): '''))
 
-    # You typed in an invalid character. Please try again using only one of the defined lowercase letters.
+        print(f'''
+Elevation Calculations:
+House to Tank = {house_to_tank}ft sloped at 1/4" per foot = {(1 / 4) * house_to_tank}" Drop
+Depth from septic tank inlet to tank outlet = {tank_drop}" Drop''')
 
-    if debug is True:
-        print(f'       System Type is {system_type}')
+        if pump_dosing == 'y':
+            print(f'''Tank to Tank = {tank_to_tank}ft sloped at 1/8" per foot = {(1 / 8) * tank_to_tank}" Drop
+Depth of Pump Chamber from invert elevation to bottom = {pump_height}"
+Total drop from House to bottom of Pump Chamber = {((1/4) * house_to_tank)+((1/8)*tank_to_tank)+pump_height+tank_drop}
+''')
+        if pump_dosing != 'y':
+            print(f'''Tank to D-Box = {tank_to_db}ft sloped at 1/8" per foot = {(1 / 8) * tank_to_db}" Drop''')
 
-    if debug is True:
-        print(f'       True bedroom count {true_bedroom_number}')
+        print(f'''Depth from D-Box inlet to outlet = {first_db_drop}" Drop''')
 
-    if debug is True:
-        print('      ', number_of_bedrooms * 1, 'Bedroom system')
+        if system_type == 's':
+            print(f'''D-Box Threw Filter = {db_threw_sand}ft sloped at 1/16" per foot = {(1/16) * db_threw_sand}" Drop
+Depth of sand filter = {sand_height}" Drop
+Filter to D-Box = {sand_to_db}ft sloped at 1/8" per foot = {(1 / 8) * sand_to_db}" Drop''')
+            print(f'''Depth from D-Box inlet to outlet = {second_db_drop}" Drop''')
+        print(f'''D-Box to Trench = {db_to_trench}ft sloped at 1/8" per foot = {(1 / 8) * db_to_trench}" Drop
+Length of Trench = {trench_to_trench}ft sloped at lowest of 1/16" and 1/32" per foot = {(1/32) * trench_to_trench}" Drop
+''')
+        if pump_dosing == 'y' and system_type == 's':
+            print(f'''Total Drop = {((1 / 8) * db_to_trench) + ((1 / 32) * trench_to_trench) + first_db_drop
+                                    + second_db_drop + ((1 / 16) * db_threw_sand) + ((1 / 8) * sand_to_db) 
+                                    + sand_height}" ''')
+
+        if pump_dosing == 'y' and system_type != 's':
+            print(f'Total Drop = {((1 / 8) * db_to_trench) + ((1 / 32) * trench_to_trench) + first_db_drop}"')
+
+        if pump_dosing != 'y' and system_type == 's':
+            print(
+                f'''Total Drop = {((1 / 8) * db_to_trench) + ((1 / 32) * trench_to_trench) + ((1 / 8) * tank_to_db)
+                                  + ((1 / 16) * db_threw_sand) + ((1 / 8) * sand_to_db) + sand_height + ((1 / 4) *
+                                  house_to_tank) + tank_drop + first_db_drop + second_db_drop}" ''')
+
+        if pump_dosing != 'y' and system_type != 's':
+            print(f'''Total Drop = {((1 / 8) * db_to_trench) + ((1 / 32) * trench_to_trench) + tank_drop +
+                                    ((1 / 4) * house_to_tank) + ((1 / 8) * tank_to_db) + first_db_drop}" ''')
+
+        print('') #
+# This is the pump and pump chamber Calculator
+if program_selector == 4 or program_selector == 2:
+
+    if pump_dosing != 'y':
+        pump_dosing = input('''    Would you like to calculate pump dosing and pump chamber requirements?'
+    y/n? - ''')
+
+    if pump_dosing == 'y':
+        pump_pipe_dia = float(input('''    What is the Diameter of the pipe coming out of the Pump? (Typ. 1.25")
+    (In Inches): '''))
+        pump_pipe_length = float(input('''    What is the Length of the pipe coming out of the Pump to the D-Box?
+    (In Feet): '''))
+        pipe_dia = float(input('''    What is the Diameter of the pipe out of the D-Box?(Typ. 4")
+    (In Inches): '''))
+        pipe_length = float(input('''    What is the Length of all the pipe out of the D-Box to the Drainage Field?
+    (In Feet): '''))
+        # I'm going to have to explain the math here (Pi * R^2 * Length in inches) / 231 inches per gallon
+        pump_pipe_vol_pft = ((((pump_pipe_dia / 2) * (pump_pipe_dia / 2)) * 3.14159 * 12) / 231)
+        pump_pipe_vol = (pump_pipe_vol_pft * pump_pipe_length)
+        # For the bigger pipe it's the same thing
+        pipe_vol_pft = ((((pipe_dia / 2) * (pipe_dia / 2)) * 3.14159 * 12) / 231)
+        pipe_vol = (pipe_vol_pft * pipe_length)
+        total_vol = (pipe_vol + pump_pipe_vol)
+
+        head_height = float(input('''    What is the head height?
+    Note: Head height is the vertical distance between the lowest and highest point from the pump.
+    (in Feet): '''))
+        gallons_per_min = float(input('''    What is the Gallons Per Minute Rate for the pump? (Typ. 20 GPM)
+    (in GPM): '''))
+        head_loss_phundred = ((0.12813453036*(gallons_per_min**1.852))/(pump_pipe_dia**4.8655))
+        head_loss = ((head_loss_phundred/100)* pump_pipe_length)
+    print(f'''
+PIPE VOLUME CALCULATIONS:
+π x R^2 x LENGTH = GALLONS PER FOOT
+π x {round((pump_pipe_dia/2),4)}^2 x 12" = {round(pump_pipe_vol_pft, 4)}
+π x {round((pipe_dia/2),4)}^2 x 12" = {round(pipe_vol_pft, 4)}
+
+DOSING VOLUME:
+({pump_pipe_length}' OF {pump_pipe_dia} PIPE) x ({round(pump_pipe_vol_pft, 4)} GAL/FT) = {round(pump_pipe_vol, 3)} GAL 
+({pipe_length}' OF {pipe_dia} PIPE) x ({round(pipe_vol_pft, 4)} GAL/FT) = {round(pipe_vol, 3)} GAL  
+TOTAL VOLUME = {round(total_vol, 2)} GAL
+{round(total_vol,2)} x 0.75 = {round((total_vol * 0.75), 2)} GAL MIN 
+{round(total_vol,2)} x 0.85 = {round((total_vol * 0.85), 2)} GAL MAX
+
+HEAD LOSS:
+H = 0.2083(100/F)^1.852 V^1.852 / D^4.8655 = FRICTIONAL HEAD LOSS PER 100' OF PIPE
+F = FRICTION COEFFICIENT (130) V = VOLUME OF FLOW FROM PUMP D = DIAMETER OF PIPE
+SIMPLIFIED - (0.128 x {gallons_per_min}^1.852)/{pump_pipe_dia}^4.865 = {round(head_loss_phundred,3)} FT PER 100'
+({round(head_loss_phundred,2)}/100) x {pump_pipe_length}ft = {round(head_loss, 2)} FT
+({round(head_loss, 2)}') FRICTION HEAD LOSS + ({head_height}') STATIC HEAD LOSS = 
+{round((head_loss+head_height),2)}' TOTAL DYNAMIC HEAD LOSS
+
+PUMP CHAMBER SIZING:
+({round(total_vol)}) 100% DOSING VOLUME + ({GPD}) ONE DAYS GPD RATE = {round(total_vol+GPD)} GALLON TANK MIN.
+
+TYPICAL PUMP SIZE:
+20 GAL/MIN MINIMUM
+USE GOULDS PUMP EP0411 OR EQUAL 
+(MINIMUM BREAKER 20A; CURRENT 12A)
+''')
+
+    # Calculate pump chamber float elevations
+    # Calculate pump details
+
+if program_selector == 2:
 
     if system_type == 's':  # Sand filter system
-        sandfilterlength = math.ceil((number_of_bedrooms * 110) / 12)
+        sandfilterlength = math.ceil((bedrooms * GPD) / 12)
         sandfilter = sandfilterlength * 12
-        sqft = round(((number_of_bedrooms * 110) * .85) / 1.2)
+        sqft = round(((bedrooms * GPD) * .85) / 1.2)
         print(f'''
-        SPECIFICATIONS & CALCULATIONS:
-        THIS DESIGN IS BASED ON {true_bedroom_number} BEDROOMS, 110 GPD/BEDROOM = {number_of_bedrooms * 110} GPD
-        TOILETS: 1.6 GALLONS PER FLUSH, MAX.
-        ({garbage_disposal}) GARBAGE DISPOSAL
-        ({hot_tub}) HOT TUB
-        MINIMUM TANK SIZE: {min_tank_size} GALLONS
-        MINIMUM TANK SURFACE AREA: {tank_surface_area} SF''')
+SPECIFICATIONS & CALCULATIONS:
+THIS DESIGN IS BASED ON {bedrooms} BEDROOMS, {GPD} GPD/BEDROOM = {bedrooms * GPD} GPD
+TOILETS: 1.6 GALLONS PER FLUSH, MAX.
+({garbage_disposal}) GARBAGE DISPOSAL
+({hot_tub}) HOT TUB
+MINIMUM TANK SIZE: {min_tank_size} GALLONS
+MINIMUM TANK SURFACE AREA: {tank_surface_area} SF''')
         print(f'''
-        AREA OF SAND FILTER: 12' X {sandfilterlength}' = {sandfilter} SF
-        USING A MAXIMUM APPLICATION RATE OF 1.0 GAL/DAY/SF:
-        ({number_of_bedrooms * 110}GAL/DAY) / (1.0 GAL/DAY/SF) = {number_of_bedrooms * 110} SF
+AREA OF SAND FILTER: 12' X {sandfilterlength}' = {sandfilter} SF
+USING A MAXIMUM APPLICATION RATE OF 1.0 GAL/DAY/SF:
+({bedrooms * GPD}GAL/DAY) / (1.0 GAL/DAY/SF) = {bedrooms * GPD} SF
 
-        AREA OF DOWNSTREAM ABSORPTION TRENCHES:
-        USING A MAXIMUM APPLICATION RATE OF 1.2 GAL/DAY/SF AND 85% OF
-        THE DAILY FLOW: ({number_of_bedrooms * 110} GPD X .85)/1.2 GPD/SF = {sqft} SF
-        {sqft}/2'(TRENCH WIDTH) = {sqft / 2} LINEAR FEET OF TRENCH OR
-        X LATERALS X FT LONG''')
+AREA OF DOWNSTREAM ABSORPTION TRENCHES:
+USING A MAXIMUM APPLICATION RATE OF 1.2 GAL/DAY/SF AND 85% OF
+THE DAILY FLOW: ({bedrooms * GPD} GPD X .85)/1.2 GPD/SF = {sqft} SF
+{sqft}/2'(TRENCH WIDTH) = {sqft / 2} LINEAR FEET OF TRENCH OR
+X LATERALS X FT LONG''')
+
+    if app_rate_now == 'n':
+        print('''
+    Application Rate Table-
+    Perc. Rate in min/in : Application Rate in g/d/sf
+                     1-5 : 1.20
+                     6-7 : 1.00
+                    8-10 : 0.90
+                   11-15 : 0.80
+                   16-20 : 0.70
+                   21-30 : 0.60
+                   31-45 : 0.50
+                   46-60 : 0.45
+    ''')  # application rate chart
+        application_rate = float(input('    What is the Application Rate?: '))
 
     if system_type == 'e':
-
         application_rate = 1.2
-        sqft = round(((number_of_bedrooms * 110) * 1.00) / application_rate)
-
+        sqft = round(((bedrooms * GPD) * 1.00) / application_rate)
         print(f'''
-        SPECIFICATIONS & CALCULATIONS:
-        THIS DESIGN IS BASED ON {true_bedroom_number} BEDROOMS, 110 GPD/BEDROOM = {number_of_bedrooms * 110} GPD
-        TOILETS: 1.6 GALLONS PER FLUSH, MAX.
-        ({garbage_disposal}) GARBAGE DISPOSAL
-        ({hot_tub}) HOT TUB
-        MINIMUM TANK SIZE: {min_tank_size} GALLONS
-        MINIMUM TANK SURFACE AREA: {tank_surface_area} SF''')  # Specifications
+SPECIFICATIONS & CALCULATIONS:
+THIS DESIGN IS BASED ON {bedrooms} BEDROOMS, {GPD} GPD/BEDROOM = {bedrooms * GPD} GPD
+TOILETS: 1.6 GALLONS PER FLUSH, MAX.
+({garbage_disposal}) GARBAGE DISPOSAL
+({hot_tub}) HOT TUB
+MINIMUM TANK SIZE: {min_tank_size} GALLONS
+MINIMUM TANK SURFACE AREA: {tank_surface_area} SF''')  # Specifications
         print(f'''
-        AREA OF DOWNSTREAM ABSORPTION TRENCHES:
-        USING A MAXIMUM APPLICATION RATE OF {application_rate} GAL/DAY/SF AND 100% OF
-        THE DAILY FLOW: ({number_of_bedrooms * 110} GPD X 1.00)/{application_rate} GPD/SF = {sqft} SF
-        {sqft}/6 SF/LF(TRENCH WIDTH) = {math.ceil(sqft / 6)} LINEAR FEET OF TRENCH OR
-        X LATERALS X FT LONG''')  # Calculations
+AREA OF DOWNSTREAM ABSORPTION TRENCHES:
+USING A MAXIMUM APPLICATION RATE OF {application_rate} GAL/DAY/SF AND 100% OF
+THE DAILY FLOW: ({bedrooms * GPD} GPD X 1.00)/{application_rate} GPD/SF = {sqft} SF
+{sqft}/6 SF/LF(TRENCH WIDTH) = {math.ceil(sqft / 6)} LINEAR FEET OF TRENCH OR
+X LATERALS X FT LONG''')  # Calculations
+        if ETU == 'y':
+            sqft = round(((bedrooms * GPD) * (1.0 - ETUG)) / application_rate)
+            print(F'''
+ETU 33% REDUCTION = {sqft} SF
+{sqft}/6 SF/LF(TRENCH WIDTH) = {math.ceil(sqft / 6)} LINEAR FEET OF TRENCH OR
+X LATERALS X FT LONG''')
+        print('''
+PRODUCT DETAILS:
+1.GRAVELLESS ABSORPTION SYSTEM SHALL BE INSTALLED IN CONFORMANCE WITH MANUFACTURERS SPECIFICATIONS.
+2.GRAVELLESS ABSORPTION SYSTEM SIDEWALLS SHALL BE SEPARATED A MINIMUM OF 4'.
+3.ALL GRAVELLESS TRENCHES SHALL BE THE SAME LENGTH.''')
 
     if system_type == 'i':
-        if app_rate_now == 'n':
-            print('''
-        Application Rate Table-
-        Perc. Rate in min/in : Application Rate in g/d/sf
-                         1-5 : 1.20
-                         6-7 : 1.00
-                        8-10 : 0.90
-                       11-15 : 0.80
-                       16-20 : 0.70
-                       21-30 : 0.60
-                       31-45 : 0.50
-                       46-60 : 0.45
-        ''')  # application rate chart
-            application_rate = float(input('    What is the Application Rate?: '))
-
-        sqft = round(((number_of_bedrooms * 110) * .75) / application_rate)
-
+        sqft = round(((bedrooms * GPD) * .75) / application_rate)
         print(f'''
-        SPECIFICATIONS & CALCULATIONS:
-        THIS DESIGN IS BASED ON {true_bedroom_number} BEDROOMS, 110 GPD/BEDROOM = {number_of_bedrooms * 110} GPD
-        TOILETS: 1.6 GALLONS PER FLUSH, MAX.
-        ({garbage_disposal}) GARBAGE DISPOSAL
-        ({hot_tub}) HOT TUB
-        MINIMUM TANK SIZE: {min_tank_size} GALLONS
-        MINIMUM TANK SURFACE AREA: {tank_surface_area} SF''')  # Specifications
+SPECIFICATIONS & CALCULATIONS:
+THIS DESIGN IS BASED ON {bedrooms} BEDROOMS, {GPD} GPD/BEDROOM = {bedrooms * GPD} GPD
+TOILETS: 1.6 GALLONS PER FLUSH, MAX.
+({garbage_disposal}) GARBAGE DISPOSAL
+({hot_tub}) HOT TUB
+MINIMUM TANK SIZE: {min_tank_size} GALLONS
+MINIMUM TANK SURFACE AREA: {tank_surface_area} SF''')  # Specifications
         print(f'''
-        AREA OF DOWNSTREAM ABSORPTION TRENCHES:
-        USING A MAXIMUM APPLICATION RATE OF {application_rate} GAL/DAY/SF AND 75% OF
-        THE DAILY FLOW: ({number_of_bedrooms * 110} GPD X 0.75)/{application_rate} GPD/SF = {sqft} SF
-        {sqft}/2'(TRENCH WIDTH) = {sqft / 2} LINEAR FEET OF TRENCH OR
-        X LATERALS X FT LONG''')  # Calculations
+AREA OF DOWNSTREAM ABSORPTION TRENCHES:
+USING A MAXIMUM APPLICATION RATE OF {application_rate} GAL/DAY/SF AND 75% OF
+THE DAILY FLOW: ({bedrooms * GPD} GPD X 0.75)/{application_rate} GPD/SF = {sqft} SF
+{sqft}/2'(TRENCH WIDTH) = {sqft / 2} LINEAR FEET OF TRENCH OR
+X LATERALS X FT LONG''')  # Calculations
+        if ETU == 'y':
+            sqft = round(((bedrooms * GPD) * (.75 - ETUI)) / application_rate)
+            print(F'''
+ETU 33% REDUCTION = {sqft} SF
+{sqft}/2'(TRENCH WIDTH) = {sqft / 2} LINEAR FEET OF TRENCH OR
+X LATERALS X FT LONG''')
+        print('''
+PRODUCT DETAILS:
+1.GRAVELLESS TRENCHES SHALL BE INSTALLED IN CONFORMANCE WITH MANUFACTURERS SPECIFICATIONS.
+2.GRAVELLESS TRENCH SIDEWALLS SHALL BE SEPARATED A MINIMUM OF 4'.
+3.ALL GRAVELLESS TRENCHES SHALL BE THE SAME LENGTH.''')
 
     if system_type == 'g':
-        if app_rate_now == 'n':
-            print('''
-        Application Rate Table-
-        Perc. Rate in min/in : Application Rate in g/d/sf
-                         1-5 : 1.20
-                         6-7 : 1.00
-                        8-10 : 0.90
-                       11-15 : 0.80
-                       16-20 : 0.70
-                       21-30 : 0.60
-                       31-45 : 0.50
-                       46-60 : 0.45
-        ''')  # application rate chart
-            application_rate = float(input('    What is the Application Rate?: '))
-
-        sqft = round(((number_of_bedrooms * 110) * 1) / application_rate)
-
+        sqft = round(((bedrooms * GPD) * 1) / application_rate)
         print(f'''
-        SPECIFICATIONS & CALCULATIONS:
-        THIS DESIGN IS BASED ON {true_bedroom_number} BEDROOMS, 110 GPD/BEDROOM = {number_of_bedrooms * 110} GPD
-        TOILETS: 1.6 GALLONS PER FLUSH, MAX.
-        ({garbage_disposal}) GARBAGE DISPOSAL
-        ({hot_tub}) HOT TUB
-        MINIMUM TANK SIZE: {min_tank_size} GALLONS
-        MINIMUM TANK SURFACE AREA: {tank_surface_area} SF
+SPECIFICATIONS & CALCULATIONS:
+THIS DESIGN IS BASED ON {bedrooms} BEDROOMS, {GPD} GPD/BEDROOM = {bedrooms * GPD} GPD
+TOILETS: 1.6 GALLONS PER FLUSH, MAX.
+({garbage_disposal}) GARBAGE DISPOSAL
+({hot_tub}) HOT TUB
+MINIMUM TANK SIZE: {min_tank_size} GALLONS
+MINIMUM TANK SURFACE AREA: {tank_surface_area} SF
 
-        AREA OF DOWNSTREAM ABSORPTION TRENCHES:
-        USING A MAXIMUM APPLICATION RATE OF {application_rate} GAL/DAY/SF AND 100% OF
-        THE DAILY FLOW: ({number_of_bedrooms * 110} GPD X 1.00)/{application_rate} GPD/SF = {sqft} SF
-        {sqft}/2'(TRENCH WIDTH) = {sqft / 2} LINEAR FEET OF TRENCH OR
-        X LATERALS X FT LONG''')  # Calculations
+AREA OF DOWNSTREAM ABSORPTION TRENCHES:
+USING A MAXIMUM APPLICATION RATE OF {application_rate} GAL/DAY/SF AND 100% OF
+THE DAILY FLOW: ({bedrooms * GPD} GPD X 1.00)/{application_rate} GPD/SF = {sqft} SF
+{sqft}/2'(TRENCH WIDTH) = {sqft / 2} LINEAR FEET OF TRENCH OR
+X LATERALS X FT LONG''')  # Calculations
+        if ETU == 'y':
+            sqft = round(((bedrooms * GPD) * (1.0 - ETUG)) / application_rate)  # little wonky but it works
+            print(F'''
+ETU 33% REDUCTION = {sqft} SF
+{sqft}/2'(TRENCH WIDTH) = {sqft / 2} LINEAR FEET OF TRENCH OR
+X LATERALS X FT LONG''')
 
-    cont = input('Do you want to end the program? y/n?')
-    if cont == 'y':
-        break
+    print('''
+    
+NOTES: 
+1. FILL SHALL BE PLACED IN 6" LIFTS, COMPACTED VIA TRACK TYPE MACHINES (BULLDOZER OR 
+FRONT-END LOADER WITH DOWNWARD BLADE/BUCKET PRESSURE) OR STEEL WHEELED ROLLER
+2. AFTER PLACEMENT AND COMPACTION OF FILL, ADDITIONAL PERC. TESTS SHALL BE PERFORMED 
+TO CONFIRM THE PERCOLATION RATE OF THE SOIL.
+3. ON SLOPED SITES, A DIVERSION DITCH SHALL BE CONSTRUCTED UPHILL FROM THE TRENCH AREA 
+TO PREVENT SURFACE RUNOFF FROM ENTERING THE TRENCHES.
+4. TRENCH BOTTOMS SHALL BE LEVEL.
+5. TRENCHES SHALL BE PARALLEL TO THE GROUND CONTOURS.
+6. COURSE SAND TOP SHALL BE LEVEL.
+7. DISTRIBUTOR SHALL SLOPE 1/16 TO 1/32 INCH PER FOOT.
+8. SEPTIC TANK SHALL BE SET ON A BED OF SAND OR PEA GRAVEL AT LEAST 3" THICK.
+9. DISTRIBUTION BOX MUST BE LEVELED ON A BED OF SAND OR PEA GRAVEL AT LEAST 12" THICK.
+10. D-BOX MUST HAVE A BAFFLE AT THE INLET.
+11. USE SPEED LEVELERS ON ALL OUTLET PIPES.
+12. COMPONENTS OF THE SYSTEM TO BE LIKE SHOWN OR EQUIVALENT.
+13. DISCHARGE FROM ROOF GUTTERS, FOUNDATIONS, DRAINS, WATER SOFTENERS, SUMPS, ETC. WILL 
+BE SEPARATE AND AT LEAST 20 FT. FROM THE SYSTEM.
+14. SYSTEM MUST BE INSPECTED BY THE DESIGN PROFESSIONAL PRIOR TO BACK-FILLING.
+15. THIS SYSTEM WAS DESIGNED IN ACCORDANCE WITH APPENDIX 75-A.
+
+''')
+    # Add construction notes Add Component Details Pump chambers shall be sized to provide a minimum of one day's
+    # design flow storage above the alarm level or a duplex pumping system with audible or visual alarms shall be
+    # used.
+    # PUMP TANK SHALL BE EQUIPPED WITH AUDIBLE/VISUAL ALARM TO INDICATE MALFUNCTION LOCATED IN AN ACCESSIBLE
+    # AND CONSPICUOUS PLACE IN THE HOME
+
+cont = input('The program will now end when you press enter.')
